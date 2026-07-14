@@ -41,12 +41,17 @@ describe("geospatial rasterization", () => {
 });
 
 describe("landmark builders", () => {
-  it("builds a mineable India Gate with a central opening", () => {
+  it("builds a detailed, mineable India Gate with a deep central opening", () => {
     const world = new VoxelWorld();
     world.generateFlat(3);
     indiaGate.build({ world, originX: 0, originZ: 0, groundY: GROUND_LEVEL, block: BlockId });
-    expect(world.getBlock(7, GROUND_LEVEL + 10, 0)).not.toBe(BlockId.AIR);
-    expect(world.getBlock(0, GROUND_LEVEL + 10, 0)).toBe(BlockId.AIR);
+    expect(world.getBlock(8, GROUND_LEVEL + 10, 0)).toBe(BlockId.SAND);
+    expect(world.getBlock(0, GROUND_LEVEL + 10, -4)).toBe(BlockId.AIR);
+    expect(world.getBlock(0, GROUND_LEVEL + 10, 4)).toBe(BlockId.AIR);
+    expect(world.getBlock(13, GROUND_LEVEL + 21, 0)).toBe(BlockId.WHITE_MARBLE);
+    expect(world.getBlock(-11, GROUND_LEVEL + 31, 5)).toBe(BlockId.BLACK_MARBLE);
+    expect(world.getBlock(0, GROUND_LEVEL + 38, 0)).toBe(BlockId.WHITE_MARBLE);
+    expect(world.getBlock(0, GROUND_LEVEL, 25)).toBe(BlockId.WHITE_MARBLE);
   });
 
   it("builds Qutub Minar through the generic landmark contract", async () => {
