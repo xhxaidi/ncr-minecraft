@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { BlockId, type BlockIdValue } from "../world/blocks";
 
-const TILE_SIZE = 16;
-const TILES_PER_ROW = 4;
+export const TILE_SIZE = 16;
+export const TILES_PER_ROW = 8;
 
 export type TextureAtlas = {
   canvas: HTMLCanvasElement;
@@ -68,6 +68,10 @@ export function createTextureAtlas(): TextureAtlas {
   paint(12, [154, 160, 164], { noise: 0.08 });
   paint(13, [127, 182, 230], { noise: 0.05, frame: true });
   paint(14, [156, 70, 51], { brick: true, noise: 0.1 });
+  paint(15, [178, 174, 164], { courses: true, noise: 0.06 });
+  paint(16, [46, 68, 98], { noise: 0.06, frame: true });
+  paint(17, [126, 132, 140], { grain: true, noise: 0.05 });
+  paint(18, [198, 58, 48], { grain: true, noise: 0.08 });
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.magFilter = THREE.NearestFilter;

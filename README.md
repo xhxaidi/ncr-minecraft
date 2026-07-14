@@ -9,6 +9,7 @@ handcrafted, fully editable landmark builders.
 - India Gate and Kartavya Path — OSM city context + mineable India Gate
 - Old Delhi and Jama Masjid — OSM roads and building footprints
 - Connaught Place — OSM radial roads and urban blocks
+- DLF Cyber Hub — fine-grained 1.5 m/block plaza, skywalk, real DLF towers and the Rapid Metro
 - Gurugram Cyber City — OSM roads and high-rise footprints
 - Qutub Minar Landmark Lab — handcrafted mineable tower
 

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { CITY_CATALOG, allPresets, getPreset } from "../../src/content/catalog";
 import { indiaGate } from "../../src/content/cities/delhi/landmarks/indiaGate";
 import { qutubMinar } from "../../src/content/cities/delhi/landmarks/qutubMinar";
+import { cyberHub } from "../../src/content/cities/gurugram/landmarks/cyberHub";
 import { BlockId, cycleHotbar } from "../../src/engine/world/blocks";
 import { DoubleTapTracker, approach } from "../../src/engine/physics/PlayerController";
 import { GROUND_LEVEL, VoxelWorld } from "../../src/engine/world/VoxelWorld";
@@ -86,5 +87,24 @@ describe("landmark builders", () => {
     expect(stats.landmarks).toBe(1);
     expect(world.getBlock(0, GROUND_LEVEL + 32, 0)).not.toBe(BlockId.AIR);
     expect(qutubMinar.id).toBe("qutub-minar");
+  });
+
+  it("builds the Cyber Hub plaza, strips and skywalk", () => {
+    const world = new VoxelWorld();
+    world.generateFlat(6);
+    cyberHub.build({ world, originX: 0, originZ: 0, groundY: GROUND_LEVEL, block: BlockId });
+    expect(world.getBlock(0, GROUND_LEVEL, 0)).toBe(BlockId.PAVEMENT);
+    expect(world.getBlock(0, GROUND_LEVEL + 6, 11)).toBe(BlockId.PAVEMENT);
+    expect(world.getBlock(0, GROUND_LEVEL + 2, 16)).not.toBe(BlockId.AIR);
+    expect(world.getBlock(0, GROUND_LEVEL + 2, -16)).not.toBe(BlockId.AIR);
+    expect(world.getBlock(-36, GROUND_LEVEL + 1, 0)).toBe(BlockId.WATER);
+    expect(world.getBlock(0, GROUND_LEVEL + 20, 0)).toBe(BlockId.AIR);
+  });
+
+  it("registers the fine-grained cyber-hub preset", () => {
+    const preset = getPreset("cyber-hub");
+    expect(preset.blockMetres).toBe(1.5);
+    expect(preset.landmarks[0]?.id).toBe("cyber-hub");
+    expect(Object.keys(preset.buildingDetails ?? {}).length).toBeGreaterThan(10);
   });
 });

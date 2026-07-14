@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { BlockId, type BlockIdValue } from "../world/blocks";
 import { CHUNK_HEIGHT, CHUNK_SIZE, type VoxelChunk, VoxelWorld } from "../world/VoxelWorld";
-import type { TextureAtlas } from "./textureAtlas";
+import { TILES_PER_ROW, type TextureAtlas } from "./textureAtlas";
 
 type Face = {
   normal: [number, number, number];
@@ -81,10 +81,11 @@ export class ChunkMesher {
             const neighbour = this.world.getBlock(baseX + x + nx, y + ny, baseZ + z + nz);
             if (!faceVisible(block, neighbour)) continue;
             const tile = this.atlas.tileForBlock(block, ny);
-            const u0 = (tile % 4) / 4 + EPSILON;
-            const v1 = 1 - Math.floor(tile / 4) / 4 - EPSILON;
-            const u1 = u0 + 0.25 - EPSILON * 2;
-            const v0 = v1 - 0.25 + EPSILON * 2;
+            const span = 1 / TILES_PER_ROW;
+            const u0 = (tile % TILES_PER_ROW) * span + EPSILON;
+            const v1 = 1 - Math.floor(tile / TILES_PER_ROW) * span - EPSILON;
+            const u1 = u0 + span - EPSILON * 2;
+            const v0 = v1 - span + EPSILON * 2;
             const base = positions.length / 3;
             face.corners.forEach((corner, index) => {
               positions.push(baseX + x + corner[0], y + corner[1], baseZ + z + corner[2]);

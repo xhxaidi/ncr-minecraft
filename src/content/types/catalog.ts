@@ -12,6 +12,12 @@ export type SpawnPoint = {
   yaw?: number;
 };
 
+export type BuildingDetail = {
+  levels?: number;
+  heightMetres?: number;
+  material?: "glass" | "concrete" | "brick" | "sandstone" | "marble" | "metal";
+};
+
 export type PresetDefinition = {
   id: string;
   cityId: string;
@@ -23,6 +29,10 @@ export type PresetDefinition = {
   radiusChunks: number;
   spawn: SpawnPoint;
   landmarks: LandmarkDefinition[];
+  // metres represented by one block; smaller values give finer detail
+  blockMetres?: number;
+  // real-world enrichment for osm ways lacking height/material tags, keyed by way id
+  buildingDetails?: Record<number, BuildingDetail>;
 };
 
 export type CityDefinition = {

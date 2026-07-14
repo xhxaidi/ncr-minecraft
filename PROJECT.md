@@ -9,9 +9,10 @@ handcrafted landmark builders in a Netlify-ready Vite application.
 - Chunked `Uint8Array` voxel storage and exposed-face meshing
 - AABB movement, jumping, sprinting, flying and block-accurate raycasting
 - Mine/place any visible block
-- Cached OSM import for India Gate, Old Delhi, Connaught Place and Cyber City
-- Generic roads, parks, water and hollow building extrusion
-- Mineable India Gate and Qutub Minar landmark builders
+- Cached OSM import for India Gate, Old Delhi, Connaught Place, Cyber Hub and Cyber City
+- Generic roads, footpaths, parks, water, parking, fences, trees, fountains and elevated metro
+- Per-preset block scale (`blockMetres`) and per-building height/material enrichment
+- Mineable India Gate, Qutub Minar and DLF Cyber Hub landmark builders
 - Guest naming, district selection, touch controls and day/night mode
 - TypeScript, unit tests, production build and Netlify configuration
 
