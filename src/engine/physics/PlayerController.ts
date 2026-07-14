@@ -59,6 +59,11 @@ export class PlayerController {
 
   setSpawn(spawn: SpawnPoint): void {
     this.position.set(spawn.x, spawn.y, spawn.z);
+    // Real OSM footprints shift under preset spawns — climb out of any solid
+    // so the player is never trapped inside a wall.
+    while (this.position.y < 60 && !this.isFree(this.position.x, this.position.y, this.position.z)) {
+      this.position.y += 1;
+    }
     this.velocity.set(0, 0, 0);
     this.yaw = spawn.yaw ?? Math.PI;
     this.pitch = 0;

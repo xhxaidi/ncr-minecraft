@@ -111,6 +111,9 @@ export async function generatePresetWorld(
       const centre = polygon.reduce((sum, point) => ({ x: sum.x + point.x, z: sum.z + point.z }), { x: 0, z: 0 });
       centre.x /= polygon.length;
       centre.z /= polygon.length;
+      // ponytail: centroid heuristic — a huge footprint could still lap onto
+      // the approach; good enough for the demo strip.
+      if (inBazaar(centre.x, centre.z) && Math.abs(centre.z) <= 5) return true;
       return landmarkAnchors.some((landmark) => Math.hypot(centre.x - landmark.position.x, centre.z - landmark.position.z) < landmark.radiusBlocks);
     };
 
@@ -161,6 +164,16 @@ export async function generatePresetWorld(
         }
       }
       stats.roads += 1;
+    }
+    if (preset.id === "jama-masjid") {
+      // Paved bazaar approach from spawn to the east steps; registering the
+      // cells lets the props pass fill the walk with street life.
+      for (let x = 18; x <= 64; x += 1) {
+        for (let z = -3; z <= 3; z += 1) {
+          world.setBlockRaw(x, GROUND_LEVEL, z, BlockId.ROAD);
+          roadCells.add(((x + 512) << 10) | (z + 512));
+        }
+      }
     }
 
     onProgress({ stage: "Extruding building footprints", progress: 0.68 });

@@ -48,10 +48,7 @@ export class LightingRig {
   readonly hemi = new THREE.HemisphereLight(0xa8c4e0, 0xd9c1a0, 0.9);
   readonly composer: EffectComposer;
   private readonly bloom: UnrealBloomPass;
-  private readonly daySky = skyGradient(
-    [[0, "#4d92d8"], [0.55, "#9cc6ea"], [1, DAY_HORIZON]],
-    { u: 0.68, v: 0.16 },
-  );
+  private readonly daySky = skyGradient([[0, "#4d92d8"], [0.55, "#9cc6ea"], [1, DAY_HORIZON]]);
   private readonly nightSky = skyGradient([[0, "#050916"], [0.62, "#0b1230"], [1, NIGHT_HORIZON]]);
   shadowsEnabled = true;
 

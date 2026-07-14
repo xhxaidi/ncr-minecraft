@@ -13,9 +13,9 @@ export const jamaMasjid: LandmarkDefinition = {
     const set = (x: number, y: number, z: number, id: number) =>
       world.setBlockRaw(originX + x, y, originZ + z, id as Parameters<typeof world.setBlockRaw>[3]);
     const box = (x1: number, y1: number, z1: number, x2: number, y2: number, z2: number, id: number) => {
-      for (let x = x1; x <= x2; x += 1)
-        for (let y = y1; y <= y2; y += 1)
-          for (let z = z1; z <= z2; z += 1) set(x, y, z, id);
+      for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x += 1)
+        for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y += 1)
+          for (let z = Math.min(z1, z2); z <= Math.max(z1, z2); z += 1) set(x, y, z, id);
     };
     const g = groundY;
 
@@ -85,7 +85,8 @@ export const jamaMasjid: LandmarkDefinition = {
           }
         }
       }
-      set(cx, baseY + Math.ceil(radius) + 1, cz, block.AUTO_YELLOW);
+      // Finial sits directly on the dome's top block, no air gap.
+      set(cx, baseY + Math.floor(radius + 0.4) + 1, cz, block.AUTO_YELLOW);
     };
     dome(0, 3.4);
     dome(-7, 2.5);
