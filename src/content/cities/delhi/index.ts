@@ -1,6 +1,22 @@
-import type { CityDefinition } from "../../types/catalog";
+import { BlockId } from "../../../engine/world/blocks";
+import type { BuildingStyleHook, CityDefinition } from "../../types/catalog";
+import { centralPark } from "./landmarks/centralPark";
 import { indiaGate } from "./landmarks/indiaGate";
 import { qutubMinar } from "./landmarks/qutubMinar";
+
+// the georgian blocks of the inner, middle and outer circles are white
+// colonnaded facades; restyle osm footprints near the centre accordingly
+const connaughtPlaceStyle: BuildingStyleHook = (tags, centreMetres, suggestion) => {
+  const distance = Math.hypot(centreMetres.x, centreMetres.z);
+  const colour = (tags["building:colour"] ?? "").toLowerCase();
+  const white = colour === "" || colour.includes("white") || colour.includes("cream");
+  if (distance > 420 || !white) return suggestion;
+  return {
+    block: BlockId.PLASTER,
+    heightMetres: tags.height || tags["building:levels"] ? suggestion.heightMetres : 13,
+    arcade: true,
+  };
+};
 
 export const delhi: CityDefinition = {
   id: "delhi",
@@ -37,12 +53,14 @@ export const delhi: CityDefinition = {
       cityId: "delhi",
       name: "Connaught Place",
       shortName: "Connaught Place",
-      description: "The radial road system and colonnaded urban blocks of central Delhi.",
-      origin: { lat: 28.6315, lon: 77.2167 },
+      description: "Fine-grained CP: white colonnaded circles, Central Park, the giant flag, metro gates, real footpaths and trees.",
+      origin: { lat: 28.6328, lon: 77.2197 },
       dataUrl: "/data/cities/delhi/presets/connaught-place.overpass.json",
-      radiusChunks: 12,
-      spawn: { x: 0, y: 12, z: 20, yaw: Math.PI },
-      landmarks: [],
+      radiusChunks: 18,
+      blockMetres: 2,
+      spawn: { x: -2, y: 12, z: 64, yaw: 0 },
+      landmarks: [centralPark],
+      buildingStyle: connaughtPlaceStyle,
     },
     {
       id: "qutub-minar-lab",

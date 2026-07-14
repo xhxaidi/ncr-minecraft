@@ -8,6 +8,8 @@ export type LandmarkBuildContext = {
   originZ: number;
   groundY: number;
   block: typeof BlockId;
+  // metres per voxel for the active preset; size real-world dimensions with this
+  blockMetres?: number;
 };
 
 export type LandmarkDefinition = {

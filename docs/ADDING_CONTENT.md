@@ -32,9 +32,12 @@ export const mumbai: CityDefinition = {
 
 ## Fine-grained presets
 
-Presets default to 3 metres per block. Set `blockMetres` (for example `1.5`)
-for finer detail, and `buildingDetails` to enrich specific OSM ways with real
-heights and materials the map data lacks:
+Presets default to 3 metres per block. Optional fields refine them:
+
+- `blockMetres` sets metres per voxel (Cyber Hub uses 1.5, Connaught Place 2);
+  smaller values need a larger `radiusChunks` to cover the same real-world area.
+- `buildingDetails` enriches specific OSM ways with real heights and materials
+  the map data lacks:
 
 ```ts
 blockMetres: 1.5,
@@ -42,6 +45,11 @@ buildingDetails: {
   121362984: { heightMetres: 60, material: "glass" },
 },
 ```
+
+- `buildingStyle` lets a preset restyle OSM buildings wholesale. It receives the
+  raw tags, the footprint centre in metres from the origin and the generator's
+  suggestion, and returns the final `{ block, heightMetres, arcade }`. Arcade
+  buildings get an open ground-floor colonnade (Connaught Place's circles).
 
 Landmark builders registered in a fine-grained preset should author geometry
 at that preset's scale.
@@ -60,11 +68,14 @@ export const exampleLandmark: LandmarkDefinition = {
   description: "A fully mineable example.",
   anchor: { lat: 0, lon: 0 },
   suppressRadiusMetres: 80,
-  build: ({ world, originX, originZ, groundY, block }) => {
+  build: ({ world, originX, originZ, groundY, block, blockMetres }) => {
     world.setBlockRaw(originX, groundY + 1, originZ, block.BRICK);
   },
 };
 ```
+
+`blockMetres` is the preset's metres-per-voxel scale; divide real-world
+dimensions by it so a landmark keeps its true size at any resolution.
 
 Do not add landmark checks to the renderer, collision system or OSM parser.
 Registration is the extension mechanism.

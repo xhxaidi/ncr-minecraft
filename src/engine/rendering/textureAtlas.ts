@@ -29,7 +29,7 @@ export function createTextureAtlas(): TextureAtlas {
   const paint = (
     tile: number,
     base: [number, number, number],
-    options: { noise?: number; courses?: boolean; brick?: boolean; grain?: boolean; frame?: boolean } = {},
+    options: { noise?: number; courses?: boolean; brick?: boolean; grain?: boolean; frame?: boolean; band?: [number, number, number] } = {},
   ) => {
     const rnd = random(tile * 7_919 + 1);
     const ox = (tile % TILES_PER_ROW) * TILE_SIZE;
@@ -50,6 +50,10 @@ export function createTextureAtlas(): TextureAtlas {
       context.fillRect(ox, oy + 15, 16, 1);
       context.fillRect(ox, oy, 1, 16);
       context.fillRect(ox + 15, oy, 1, 16);
+    }
+    if (options.band) {
+      context.fillStyle = `rgb(${options.band[0]},${options.band[1]},${options.band[2]})`;
+      context.fillRect(ox, oy + 6, 16, 4);
     }
   };
 
@@ -72,6 +76,14 @@ export function createTextureAtlas(): TextureAtlas {
   paint(16, [46, 68, 98], { noise: 0.06, frame: true });
   paint(17, [126, 132, 140], { grain: true, noise: 0.05 });
   paint(18, [198, 58, 48], { grain: true, noise: 0.08 });
+  paint(19, [238, 232, 216], { noise: 0.05, courses: true });
+  paint(20, [244, 122, 32], { noise: 0.05 });
+  paint(21, [22, 134, 24], { noise: 0.06 });
+  paint(22, [70, 74, 79], { noise: 0.08, band: [225, 225, 220] });
+  paint(23, [43, 94, 36], { noise: 0.32 });
+  paint(24, [255, 241, 194], { noise: 0.03 });
+  paint(25, [124, 118, 108], { noise: 0.1, courses: true });
+  paint(26, [16, 52, 143], { noise: 0.06 });
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.magFilter = THREE.NearestFilter;
@@ -82,8 +94,9 @@ export function createTextureAtlas(): TextureAtlas {
   return {
     canvas,
     texture,
-    tileForBlock: (block, faceY) => block === BlockId.GRASS && faceY !== 1
-      ? faceY === -1 ? BlockId.DIRT : 1
+    // grass: green top (tile 0), earthy sides (tile 1), dirt underside
+    tileForBlock: (block, faceY) => block === BlockId.GRASS
+      ? faceY === 1 ? 0 : faceY === -1 ? BlockId.DIRT : 1
       : block,
   };
 }

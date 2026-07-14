@@ -205,7 +205,7 @@ export class GameApp {
       });
       this.player.setSpawn(this.currentPreset.spawn);
       this.mesher.rebuildBudget(36);
-      this.stats.textContent = `${result.buildings} buildings · ${result.roads} roads · ${result.landmarks} landmarks`;
+      this.stats.textContent = `${result.buildings} buildings · ${result.roads} roads · ${result.trees} trees · ${result.landmarks} landmarks`;
       required<HTMLElement>("#world-source").textContent = this.currentPreset.dataUrl ? "CACHED OPENSTREETMAP" : "HANDCRAFTED LANDMARK LAB";
       this.showToast(`${this.currentPreset.shortName} ready · every visible block is editable`);
     } catch (error) {
