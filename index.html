@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#132322" />
+    <meta name="description" content="Explore real Delhi-NCR map data as a mineable voxel world." />
+    <meta property="og:title" content="Dilli Blocks — Real NCR, Mineable" />
+    <meta property="og:description" content="Walk real roads, explore voxel landmarks and reshape Delhi-NCR in your browser." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>Dilli Blocks — Real NCR, Mineable</title>
+  </head>
+  <body>
+    <main id="app">
+      <div id="game" aria-label="Playable voxel world"></div>
+      <div id="crosshair" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-cube" aria-hidden="true"></span>
+          <div><strong>DILLI BLOCKS</strong><small>REAL NCR · MINEABLE</small></div>
+        </div>
+        <div class="topbar-actions">
+          <button id="time-toggle" class="glass-button" type="button">Day / night</button>
+          <div class="guest-pill"><span></span><b id="guest-label">Guest Explorer</b></div>
+        </div>
+      </header>
+
+      <aside class="world-panel" aria-label="World selection">
+        <div class="panel-heading">
+          <span>WORLD DIRECTORY</span>
+          <strong>Choose a district</strong>
+        </div>
+        <nav id="preset-list"></nav>
+        <div class="world-stats">
+          <span id="world-source">Cached OSM</span>
+          <b id="world-stats">Preparing world…</b>
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">
+            Map data © OpenStreetMap contributors
+          </a>
+        </div>
+      </aside>
+
+      <section class="location-card" aria-live="polite">
+        <span>YOU ARE EXPLORING</span>
+        <strong id="location-name">India Gate</strong>
+        <small id="location-description">Loading real map data…</small>
+      </section>
+
+      <div class="telemetry">
+        <span id="fps">0 FPS</span>
+        <span id="coords">x 0 · y 0 · z 0</span>
+      </div>
+
+      <div id="toast" class="toast" aria-live="polite">Loading voxel engine</div>
+      <div id="hotbar" class="hotbar" aria-label="Block selection"></div>
+
+      <div class="controls-card">
+        <span><kbd>WASD</kbd> Move</span>
+        <span><kbd>SPACE</kbd> Jump</span>
+        <span><kbd>F</kbd> Fly</span>
+        <span><kbd>CLICK</kbd> Mine</span>
+        <span><kbd>RIGHT CLICK</kbd> Build</span>
+      </div>
+
+      <div class="touch-controls" aria-label="Touch controls">
+        <div class="touch-dpad">
+          <button data-move="KeyW" aria-label="Move forward">↑</button>
+          <button data-move="KeyA" aria-label="Move left">←</button>
+          <button data-move="KeyS" aria-label="Move backward">↓</button>
+          <button data-move="KeyD" aria-label="Move right">→</button>
+        </div>
+        <div class="touch-actions">
+          <button id="touch-mine">Mine</button>
+          <button id="touch-build">Build</button>
+        </div>
+      </div>
+
+      <section id="welcome" class="welcome-layer">
+        <div class="welcome-card">
+          <span class="eyebrow">OPENSTREETMAP → VOXEL WORLD</span>
+          <h1>Real NCR.<br /><em>Every block mineable.</em></h1>
+          <p>
+            Walk real Delhi and Gurugram roads, explore handcrafted monuments,
+            then break and rebuild the city directly in your browser.
+          </p>
+          <form id="guest-form">
+            <label for="guest-name">Choose a guest name</label>
+            <div class="guest-entry">
+              <input id="guest-name" maxlength="20" value="Guest Explorer" autocomplete="nickname" />
+              <button type="submit">Enter India Gate <span>→</span></button>
+            </div>
+          </form>
+          <div class="welcome-points">
+            <span>Real map footprints</span><span>Mineable landmarks</span><span>No account needed</span>
+          </div>
+        </div>
+        <div class="welcome-index"><b>05</b><span>WORLDS<br />DELHI + GURUGRAM</span></div>
+      </section>
+
+      <section id="pause" class="pause-layer hidden">
+        <div>
+          <span>EXPLORATION PAUSED</span>
+          <h2>Return to the city?</h2>
+          <button id="resume" type="button">Continue exploring</button>
+          <button id="choose-world" class="secondary-button" type="button">Choose another district</button>
+          <small>Press Esc to release your cursor.</small>
+        </div>
+      </section>
+
+      <section id="loading" class="loading-layer">
+        <div class="loading-card">
+          <span>GENERATING DISTRICT</span>
+          <strong id="loading-stage">Preparing voxel terrain</strong>
+          <div><i id="loading-progress"></i></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
