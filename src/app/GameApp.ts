@@ -3,7 +3,7 @@ import { CITY_CATALOG, getPreset } from "../content/catalog";
 import type { PresetDefinition } from "../content/types/catalog";
 import { HOTBAR_BLOCKS, BLOCK_NAMES, BlockId, type BlockIdValue } from "../engine/world/blocks";
 import { VoxelWorld } from "../engine/world/VoxelWorld";
-import { createTextureAtlas } from "../engine/rendering/textureAtlas";
+import { createTextureAtlas, TILES_PER_ROW, TILE_SIZE } from "../engine/rendering/textureAtlas";
 import { ChunkMesher } from "../engine/rendering/ChunkMesher";
 import { PlayerController } from "../engine/physics/PlayerController";
 import { raycastVoxel } from "../engine/physics/raycast";
@@ -107,7 +107,7 @@ export class GameApp {
       canvas.width = canvas.height = 16;
       const context = canvas.getContext("2d");
       const tile = this.atlas.tileForBlock(block, 0);
-      context?.drawImage(this.atlas.canvas, (tile % 4) * 16, Math.floor(tile / 4) * 16, 16, 16, 0, 0, 16, 16);
+      context?.drawImage(this.atlas.canvas, (tile % TILES_PER_ROW) * TILE_SIZE, Math.floor(tile / TILES_PER_ROW) * TILE_SIZE, TILE_SIZE, TILE_SIZE, 0, 0, 16, 16);
       const key = document.createElement("kbd");
       key.textContent = String(index + 1);
       button.append(canvas, key);

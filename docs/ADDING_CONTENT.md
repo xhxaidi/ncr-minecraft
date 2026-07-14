@@ -30,6 +30,22 @@ export const mumbai: CityDefinition = {
 };
 ```
 
+## Fine-grained presets
+
+Presets default to 3 metres per block. Set `blockMetres` (for example `1.5`)
+for finer detail, and `buildingDetails` to enrich specific OSM ways with real
+heights and materials the map data lacks:
+
+```ts
+blockMetres: 1.5,
+buildingDetails: {
+  121362984: { heightMetres: 60, material: "glass" },
+},
+```
+
+Landmark builders registered in a fine-grained preset should author geometry
+at that preset's scale.
+
 ## Add a landmark
 
 1. Create a builder in the owning city's `landmarks/` directory.
