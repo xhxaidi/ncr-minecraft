@@ -23,6 +23,10 @@ export type PresetDefinition = {
   radiusChunks: number;
   spawn: SpawnPoint;
   landmarks: LandmarkDefinition[];
+  credit?: {
+    label: string;
+    url: string;
+  };
 };
 
 export type CityDefinition = {

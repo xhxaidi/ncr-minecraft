@@ -166,6 +166,10 @@ export class GameApp {
       this.mesher.rebuildBudget(36);
       this.stats.textContent = `${result.buildings} buildings · ${result.roads} roads · ${result.landmarks} landmarks`;
       required<HTMLElement>("#world-source").textContent = this.currentPreset.dataUrl ? "CACHED OPENSTREETMAP" : "HANDCRAFTED LANDMARK LAB";
+      const credit = required<HTMLAnchorElement>("#landmark-credit");
+      credit.classList.toggle("hidden", !this.currentPreset.credit);
+      credit.textContent = this.currentPreset.credit?.label ?? "";
+      credit.href = this.currentPreset.credit?.url ?? "#";
       this.showToast(`${this.currentPreset.shortName} ready · every visible block is editable`);
     } catch (error) {
       this.stats.textContent = "World generation failed";

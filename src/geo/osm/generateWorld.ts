@@ -99,6 +99,9 @@ export async function generatePresetWorld(
       position: geoToBlock(landmark.anchor, preset.origin),
       radiusBlocks: landmark.suppressRadiusMetres / 3,
     }));
+    const nearLandmark = (x: number, z: number, padding = 0) => landmarkAnchors.some((landmark) =>
+      Math.hypot(x - landmark.position.x, z - landmark.position.z) < landmark.radiusBlocks + padding,
+    );
     const suppressed = (polygon: Array<{ x: number; z: number }>) => {
       if (!polygon.length) return false;
       const centre = polygon.reduce((sum, point) => ({ x: sum.x + point.x, z: sum.z + point.z }), { x: 0, z: 0 });
@@ -118,7 +121,7 @@ export async function generatePresetWorld(
         fillPolygon(polygon, limit, (x, z) => {
           world.setBlockRaw(x, GROUND_LEVEL, z, BlockId.GRASS);
           const seed = Math.abs((x * 73856093) ^ (z * 19349663));
-          if (seed % 97 === 0) {
+          if (!nearLandmark(x, z, 8) && seed % 97 === 0) {
             for (let y = 1; y <= 3; y += 1) world.setBlockRaw(x, GROUND_LEVEL + y, z, BlockId.WOOD);
             for (let dx = -1; dx <= 1; dx += 1) {
               for (let dz = -1; dz <= 1; dz += 1) {

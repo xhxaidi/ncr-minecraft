@@ -2,6 +2,10 @@ import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { CITY_CATALOG, allPresets, getPreset } from "../../src/content/catalog";
 import { indiaGate } from "../../src/content/cities/delhi/landmarks/indiaGate";
+import {
+  INDIA_GATE_BOUNDS,
+  INDIA_GATE_VOXEL_COUNT,
+} from "../../src/content/cities/delhi/landmarks/data/indiaGateVoxels.generated";
 import { qutubMinar } from "../../src/content/cities/delhi/landmarks/qutubMinar";
 import { BlockId } from "../../src/engine/world/blocks";
 import { GROUND_LEVEL, VoxelWorld } from "../../src/engine/world/VoxelWorld";
@@ -41,17 +45,18 @@ describe("geospatial rasterization", () => {
 });
 
 describe("landmark builders", () => {
-  it("builds a detailed, mineable India Gate with a deep central opening", () => {
+  it("builds the source-modelled India Gate with accurate proportions and a clear reveal", () => {
     const world = new VoxelWorld();
     world.generateFlat(3);
+    world.setBlockRaw(20, GROUND_LEVEL + 4, 20, BlockId.WOOD);
     indiaGate.build({ world, originX: 0, originZ: 0, groundY: GROUND_LEVEL, block: BlockId });
-    expect(world.getBlock(8, GROUND_LEVEL + 10, 0)).toBe(BlockId.SAND);
-    expect(world.getBlock(0, GROUND_LEVEL + 10, -4)).toBe(BlockId.AIR);
-    expect(world.getBlock(0, GROUND_LEVEL + 10, 4)).toBe(BlockId.AIR);
-    expect(world.getBlock(13, GROUND_LEVEL + 21, 0)).toBe(BlockId.WHITE_MARBLE);
-    expect(world.getBlock(-11, GROUND_LEVEL + 31, 5)).toBe(BlockId.BLACK_MARBLE);
-    expect(world.getBlock(0, GROUND_LEVEL + 38, 0)).toBe(BlockId.WHITE_MARBLE);
-    expect(world.getBlock(0, GROUND_LEVEL, 25)).toBe(BlockId.WHITE_MARBLE);
+    expect(INDIA_GATE_VOXEL_COUNT).toBeGreaterThan(9_000);
+    expect(INDIA_GATE_BOUNDS).toMatchObject({ minX: -16, maxX: 16, maxY: 46 });
+    expect(world.getBlock(10, GROUND_LEVEL + 10, 3)).toBe(BlockId.SAND);
+    expect(world.getBlock(0, GROUND_LEVEL + 10, 0)).toBe(BlockId.AIR);
+    expect(world.getBlock(0, GROUND_LEVEL + 47, 0)).toBe(BlockId.SAND);
+    expect(world.getBlock(20, GROUND_LEVEL + 4, 20)).toBe(BlockId.AIR);
+    expect(world.getBlock(0, GROUND_LEVEL, 25)).toBe(BlockId.SAND);
   });
 
   it("builds Qutub Minar through the generic landmark contract", async () => {
