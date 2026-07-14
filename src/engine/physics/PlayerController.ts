@@ -23,6 +23,7 @@ export class PlayerController {
     onLockChange: (locked: boolean) => void,
   ) {
     addEventListener("keydown", (event) => {
+      if ((event.target as HTMLElement | null)?.tagName === "INPUT") return;
       if (event.code === "KeyF" && !event.repeat) {
         this.fly = !this.fly;
         this.velocity.y = 0;

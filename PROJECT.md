@@ -6,7 +6,12 @@ handcrafted landmark builders in a Netlify-ready Vite application.
 
 ## Current capabilities
 
-- Chunked `Uint8Array` voxel storage and exposed-face meshing
+- Chunked `Uint8Array` voxel storage and exposed-face meshing with per-vertex
+  AO, directional face shading and a vertex-colour palette
+- React + zustand UI over a plain-TS engine facade (`engine/game.ts`)
+- Day-first lighting: sun/hemisphere rig, soft shadows with an FPS kill
+  switch, bloom; `T` command bar ("make it night") flips windows and neon
+  to emissive night mode
 - AABB movement, jumping, sprinting, flying and block-accurate raycasting
 - Mine/place any visible block
 - Cached OSM import for India Gate, Old Delhi, Connaught Place and Cyber City

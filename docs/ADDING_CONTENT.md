@@ -67,8 +67,9 @@ India Gate is the reference implementation. Its generated data is rebuilt with
 
 ## Add a block
 
-1. Add its ID to `engine/world/blocks.ts`.
-2. Paint its atlas tile in `engine/rendering/textureAtlas.ts`.
+1. Add its ID, name and palette colour to `engine/world/blocks.ts`.
+2. If it needs special colouring (hashed hues, stripes) or emissive night
+   behaviour, handle it in `engine/rendering/ChunkMesher.ts`.
 3. Add it to the hotbar only if players should place it directly.
 
 Block IDs are serialized into `Uint8Array`; keep values between 0 and 255 and

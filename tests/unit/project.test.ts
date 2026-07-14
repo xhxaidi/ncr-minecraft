@@ -1,23 +1,19 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { CITY_CATALOG, allPresets, getPreset } from "../../src/content/catalog";
-import { indiaGate } from "../../src/content/cities/delhi/landmarks/indiaGate";
-import {
-  INDIA_GATE_BOUNDS,
-  INDIA_GATE_VOXEL_COUNT,
-} from "../../src/content/cities/delhi/landmarks/data/indiaGateVoxels.generated";
-import { qutubMinar } from "../../src/content/cities/delhi/landmarks/qutubMinar";
+import { jamaMasjid } from "../../src/content/cities/delhi/landmarks/jamaMasjid";
 import { BlockId } from "../../src/engine/world/blocks";
 import { GROUND_LEVEL, VoxelWorld } from "../../src/engine/world/VoxelWorld";
 import { geoToBlock } from "../../src/geo/osm/projection";
 import { pointInPolygon, rasterLine } from "../../src/geo/osm/raster";
-import { generatePresetWorld } from "../../src/geo/osm/generateWorld";
 
 describe("city catalog", () => {
-  it("uses unique city and preset ids", () => {
+  it("uses unique ids and leads with the Jama Masjid demo as the only landmark", () => {
     expect(new Set(CITY_CATALOG.map((city) => city.id)).size).toBe(CITY_CATALOG.length);
     const presets = allPresets();
     expect(new Set(presets.map((preset) => preset.id)).size).toBe(presets.length);
+    expect(presets[0]?.id).toBe("jama-masjid");
+    expect(presets.flatMap((preset) => preset.landmarks).map((landmark) => landmark.id)).toEqual(["jama-masjid"]);
     expect(getPreset("cyber-city").cityId).toBe("gurugram");
   });
 
@@ -44,26 +40,20 @@ describe("geospatial rasterization", () => {
   });
 });
 
-describe("landmark builders", () => {
-  it("builds the source-modelled India Gate with accurate proportions and a clear reveal", () => {
+describe("jama masjid landmark", () => {
+  it("builds a walkable mosque with marble domes and an open east gate", () => {
     const world = new VoxelWorld();
     world.generateFlat(3);
-    world.setBlockRaw(20, GROUND_LEVEL + 4, 20, BlockId.WOOD);
-    indiaGate.build({ world, originX: 0, originZ: 0, groundY: GROUND_LEVEL, block: BlockId });
-    expect(INDIA_GATE_VOXEL_COUNT).toBeGreaterThan(9_000);
-    expect(INDIA_GATE_BOUNDS).toMatchObject({ minX: -16, maxX: 16, maxY: 46 });
-    expect(world.getBlock(10, GROUND_LEVEL + 10, 3)).toBe(BlockId.SAND);
-    expect(world.getBlock(0, GROUND_LEVEL + 10, 0)).toBe(BlockId.AIR);
-    expect(world.getBlock(0, GROUND_LEVEL + 47, 0)).toBe(BlockId.SAND);
-    expect(world.getBlock(20, GROUND_LEVEL + 4, 20)).toBe(BlockId.AIR);
-    expect(world.getBlock(0, GROUND_LEVEL, 25)).toBe(BlockId.SAND);
-  });
-
-  it("builds Qutub Minar through the generic landmark contract", async () => {
-    const world = new VoxelWorld();
-    const stats = await generatePresetWorld(world, getPreset("qutub-minar-lab"));
-    expect(stats.landmarks).toBe(1);
-    expect(world.getBlock(0, GROUND_LEVEL + 32, 0)).not.toBe(BlockId.AIR);
-    expect(qutubMinar.id).toBe("qutub-minar");
+    jamaMasjid.build({ world, originX: 0, originZ: 0, groundY: GROUND_LEVEL, block: BlockId });
+    // Central dome rises in marble above the prayer hall roof.
+    expect(world.getBlock(-14, GROUND_LEVEL + 10, 0)).toBe(BlockId.WHITE_MARBLE);
+    // The east gate arch stays walkable on the bazaar axis.
+    expect(world.getBlock(17, GROUND_LEVEL + 2, 0)).toBe(BlockId.AIR);
+    expect(world.getBlock(17, GROUND_LEVEL + 3, 0)).toBe(BlockId.AIR);
+    // Courtyard paving sits on the plinth with open air above.
+    expect(world.getBlock(6, GROUND_LEVEL + 1, 6)).not.toBe(BlockId.AIR);
+    expect(world.getBlock(6, GROUND_LEVEL + 2, 6)).toBe(BlockId.AIR);
+    // Minarets top out above the domes.
+    expect(world.getBlock(-11, GROUND_LEVEL + 15, 12)).toBe(BlockId.WHITE_MARBLE);
   });
 });

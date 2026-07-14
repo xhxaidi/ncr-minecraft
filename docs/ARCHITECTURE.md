@@ -17,17 +17,18 @@ ncr-minecraft/
 │   │       └── gurugram/presets/*.overpass.json
 │   └── og.png
 ├── src/
-│   ├── app/
-│   │   └── GameApp.ts               # runtime orchestration and DOM UI
-│   ├── engine/
+│   ├── engine/                      # plain TS, zero React imports
+│   │   ├── game.ts                  # facade: init, loop, loadPreset, searchPlace,
+│   │   │                            #   setTimeOfDay, execCommand, on(event)
+│   │   ├── lighting.ts              # day/night rig, shadows, sky, fog, bloom
 │   │   ├── physics/
 │   │   │   ├── PlayerController.ts  # movement and AABB collision
 │   │   │   └── raycast.ts           # voxel DDA raycast
 │   │   ├── rendering/
-│   │   │   ├── ChunkMesher.ts       # exposed-face chunk geometry
-│   │   │   └── textureAtlas.ts      # generated pixel textures
+│   │   │   └── ChunkMesher.ts       # culled chunk geometry, vertex-colour
+│   │   │                            #   palette, per-vertex AO, face shading
 │   │   └── world/
-│   │       ├── blocks.ts            # block IDs and properties
+│   │       ├── blocks.ts            # block IDs, names and palette colours
 │   │       └── VoxelWorld.ts        # chunks, reads, writes and dirty state
 │   ├── geo/
 │   │   └── osm/
@@ -44,7 +45,14 @@ ncr-minecraft/
 │   │       │   └── landmarks/       # builders + generated voxel datasets
 │   │       └── gurugram/
 │   │           └── index.ts         # Gurugram presets
-│   ├── main.ts
+│   ├── ui/                          # React components only
+│   │   ├── store.ts                 # zustand store bridging engine → UI
+│   │   ├── App.tsx                  # canvas mount, welcome/pause overlays
+│   │   ├── TopBar.tsx               # preset dropdown, search, time toggle
+│   │   ├── HUD.tsx                  # crosshair, FPS, hotbar, touch controls
+│   │   ├── CommandBar.tsx           # T-key command overlay
+│   │   └── LoadingOverlay.tsx
+│   ├── main.tsx
 │   └── styles.css
 ├── tests/unit/
 ├── index.html
@@ -55,12 +63,19 @@ ncr-minecraft/
 ## Dependency direction
 
 ```text
-UI / GameApp
+React UI (src/ui) ── zustand store ──▶ engine events
+    ↓ calls public API
+Game facade (engine/game.ts)
     ↓
 City catalog + generic OSM generator
     ↓
-Voxel world + physics + renderer
+Voxel world + physics + renderer + lighting
 ```
+
+The UI never touches scene objects. The engine pushes state through
+`game.on(event)` listeners that write to the zustand store; components call
+the facade's public API (`loadPreset`, `searchPlace`, `setTimeOfDay`,
+`execCommand`).
 
 The engine never imports a city or landmark. City packages may import the
 engine's public block/world types. This one-way dependency makes the engine

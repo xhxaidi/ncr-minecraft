@@ -102,6 +102,10 @@ export async function generatePresetWorld(
     const nearLandmark = (x: number, z: number, padding = 0) => landmarkAnchors.some((landmark) =>
       Math.hypot(x - landmark.position.x, z - landmark.position.z) < landmark.radiusBlocks + padding,
     );
+    // The bazaar approach east of Jama Masjid is the demo walk — densest
+    // props and signs on the whole map.
+    const inBazaar = (x: number, z: number) =>
+      preset.id === "jama-masjid" && x >= 18 && x <= 62 && Math.abs(z) <= 9;
     const suppressed = (polygon: Array<{ x: number; z: number }>) => {
       if (!polygon.length) return false;
       const centre = polygon.reduce((sum, point) => ({ x: sum.x + point.x, z: sum.z + point.z }), { x: 0, z: 0 });
@@ -135,6 +139,7 @@ export async function generatePresetWorld(
     }
 
     onProgress({ stage: "Rasterizing real roads", progress: 0.46 });
+    const roadCells = new Set<number>(); // packed (x+512) << 10 | (z+512), for the props pass
     for (const way of ways) {
       const tags = way.tags ?? {};
       if (!tags.highway) continue;
@@ -149,6 +154,7 @@ export async function generatePresetWorld(
             for (let dz = -radius; dz <= radius; dz += 1) {
               if (withinLimit(point.x + dx, point.z + dz, limit)) {
                 world.setBlockRaw(point.x + dx, GROUND_LEVEL, point.z + dz, BlockId.ROAD);
+                roadCells.add(((point.x + dx + 512) << 10) | (point.z + dz + 512));
               }
             }
           }
@@ -175,12 +181,54 @@ export async function generatePresetWorld(
           if (!withinLimit(point.x, point.z, limit)) continue;
           for (let y = 1; y <= height; y += 1) {
             const window = block !== BlockId.GLASS && y % 3 === 2 && (Math.abs(point.x + point.z) % 4 === 0);
-            world.setBlockRaw(point.x, GROUND_LEVEL + y, point.z, window ? BlockId.GLASS : block);
+            world.setBlockRaw(point.x, GROUND_LEVEL + y, point.z, window ? BlockId.WINDOW : block);
+          }
+          const neonSeed = Math.abs((point.x * 73856093) ^ (point.z * 19349663));
+          if (block !== BlockId.GLASS && neonSeed % (inBazaar(point.x, point.z) ? 9 : 29) === 0) {
+            world.setBlockRaw(point.x, GROUND_LEVEL + 2, point.z, BlockId.NEON);
           }
         }
       }
       fillPolygon(polygon, limit, (x, z) => world.setBlockRaw(x, GROUND_LEVEL + height, z, block));
       stats.buildings += 1;
+    }
+
+    onProgress({ stage: "Adding street life", progress: 0.82 });
+    const clear = (x: number, y: number, z: number) => world.getBlock(x, y, z) === BlockId.AIR;
+    for (const cell of roadCells) {
+      const x = (cell >> 10) - 512;
+      const z = (cell & 1023) - 512;
+      // Landmarks own their ground — no props inside a suppression zone.
+      if (nearLandmark(x, z)) continue;
+      // Well-mixed hash — a plain xor of two products leaves diagonal stripes
+      // of prop placements when taken mod a small prime.
+      let seed = (x * 374761393 + z * 668265263) | 0;
+      seed = Math.imul(seed ^ (seed >>> 13), 1274126177);
+      seed = Math.abs(seed ^ (seed >>> 16));
+      const y = GROUND_LEVEL + 1;
+      const density = inBazaar(x, z) ? 4 : 1;
+      if (seed % Math.max(3, Math.round(149 / density)) === 0 && clear(x, y, z) && clear(x + 1, y, z) && clear(x, y + 1, z) && clear(x + 1, y + 1, z)) {
+        // Auto-rickshaw: green body, yellow roof.
+        world.setBlockRaw(x, y, z, BlockId.AUTO_GREEN);
+        world.setBlockRaw(x + 1, y, z, BlockId.AUTO_GREEN);
+        world.setBlockRaw(x, y + 1, z, BlockId.AUTO_YELLOW);
+        world.setBlockRaw(x + 1, y + 1, z, BlockId.AUTO_YELLOW);
+      } else if (seed % Math.max(5, Math.round(353 / density)) === 0 && clear(x, y + 2, z)) {
+        // Market stall: striped 3×3 canopy on two wood posts.
+        for (let dx = -1; dx <= 1; dx += 1) {
+          for (let dz = -1; dz <= 1; dz += 1) {
+            if (clear(x + dx, y + 2, z + dz)) world.setBlockRaw(x + dx, y + 2, z + dz, BlockId.AWNING);
+          }
+        }
+        for (let dy = 0; dy < 2; dy += 1) {
+          if (clear(x - 1, y + dy, z - 1)) world.setBlockRaw(x - 1, y + dy, z - 1, BlockId.WOOD);
+          if (clear(x + 1, y + dy, z + 1)) world.setBlockRaw(x + 1, y + dy, z + 1, BlockId.WOOD);
+        }
+      } else if (seed % Math.max(2, Math.round(37 / density)) === 0 && clear(x, y, z) && clear(x, y + 1, z)) {
+        // Pedestrian: hashed clothing colour body, skin-tone head.
+        world.setBlockRaw(x, y, z, BlockId.FIGURE_BODY);
+        world.setBlockRaw(x, y + 1, z, BlockId.FIGURE_HEAD);
+      }
     }
   }
 
