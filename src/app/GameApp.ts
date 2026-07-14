@@ -1,13 +1,18 @@
 import * as THREE from "three";
-import { CITY_CATALOG, getPreset } from "../content/catalog";
+import { CITY_CATALOG, allPresets, getPreset } from "../content/catalog";
 import type { PresetDefinition } from "../content/types/catalog";
-import { HOTBAR_BLOCKS, BLOCK_NAMES, BlockId, type BlockIdValue } from "../engine/world/blocks";
+import { HOTBAR_BLOCKS, BLOCK_NAMES, BlockId, cycleHotbar, type BlockIdValue } from "../engine/world/blocks";
 import { VoxelWorld } from "../engine/world/VoxelWorld";
 import { createTextureAtlas } from "../engine/rendering/textureAtlas";
 import { ChunkMesher } from "../engine/rendering/ChunkMesher";
-import { PlayerController } from "../engine/physics/PlayerController";
-import { raycastVoxel } from "../engine/physics/raycast";
+import { PlayerController, approach, isTypingTarget } from "../engine/physics/PlayerController";
+import { raycastVoxel, type VoxelHit } from "../engine/physics/raycast";
 import { generatePresetWorld } from "../geo/osm/generateWorld";
+
+const BASE_FOV = 72;
+const SPRINT_FOV = 80;
+const FOV_RATE = 10;
+const ACTION_REPEAT_MS = 250;
 
 function required<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
@@ -15,14 +20,24 @@ function required<T extends Element>(selector: string): T {
   return element;
 }
 
+function createBlockOutline(): THREE.LineSegments {
+  const geometry = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002, 1.002, 1.002));
+  const material = new THREE.LineBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.55 });
+  const outline = new THREE.LineSegments(geometry, material);
+  outline.renderOrder = 1;
+  outline.visible = false;
+  return outline;
+}
+
 export class GameApp {
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 1000);
+  private readonly camera = new THREE.PerspectiveCamera(BASE_FOV, innerWidth / innerHeight, 0.1, 1000);
   private readonly renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
   private readonly world = new VoxelWorld();
   private readonly atlas = createTextureAtlas();
   private readonly mesher = new ChunkMesher(this.scene, this.world, this.atlas);
   private readonly player: PlayerController;
+  private readonly outline = createBlockOutline();
   private selected = 0;
   private currentPreset: PresetDefinition = getPreset("india-gate");
   private entered = false;
@@ -31,6 +46,9 @@ export class GameApp {
   private frames = 0;
   private fpsElapsed = 0;
   private lastFrame = performance.now();
+  private targetHit: VoxelHit | null = null;
+  private heldButton: number | null = null;
+  private nextActionAt = 0;
 
   private readonly gameRoot = required<HTMLDivElement>("#game");
   private readonly welcome = required<HTMLElement>("#welcome");
@@ -50,23 +68,46 @@ export class GameApp {
     this.renderer.setSize(innerWidth, innerHeight);
     this.gameRoot.append(this.renderer.domElement);
     this.player = new PlayerController(this.world, this.camera, this.renderer.domElement, (locked) => {
+      if (!locked) this.heldButton = null;
       if (!this.entered || matchMedia("(pointer: coarse)").matches) return;
       this.pause.classList.toggle("hidden", locked);
     });
+    this.scene.add(this.outline);
     this.installUi();
     this.setTime(true);
     addEventListener("resize", () => this.resize());
     addEventListener("keydown", (event) => {
+      if (isTypingTarget(event.target) || !this.entered) return;
       if (event.code.startsWith("Digit")) {
         const index = Number(event.code.slice(5)) - 1;
         if (index >= 0 && index < HOTBAR_BLOCKS.length) this.selectBlock(index);
       }
+      if (event.code === "KeyR") {
+        this.player.setSpawn(this.currentPreset.spawn);
+        this.showToast(`Respawned at ${this.currentPreset.shortName}`);
+      }
+      if (event.code === "BracketLeft") this.cyclePreset(-1);
+      if (event.code === "BracketRight") this.cyclePreset(1);
     });
     this.renderer.domElement.addEventListener("mousedown", (event) => {
       if (document.pointerLockElement !== this.renderer.domElement) return;
+      if (event.button === 1) {
+        event.preventDefault();
+        this.pickBlock();
+        return;
+      }
+      if (event.button !== 0 && event.button !== 2) return;
+      this.heldButton = event.button;
+      this.nextActionAt = performance.now() + ACTION_REPEAT_MS;
       if (event.button === 0) this.mine();
-      if (event.button === 2) this.build();
+      else this.build();
     });
+    addEventListener("mouseup", () => { this.heldButton = null; });
+    addEventListener("wheel", (event) => {
+      if (document.pointerLockElement !== this.renderer.domElement) return;
+      const direction = Math.sign(event.deltaY);
+      if (direction) this.selectBlock(cycleHotbar(this.selected, direction, HOTBAR_BLOCKS.length));
+    }, { passive: true });
     this.renderer.domElement.addEventListener("contextmenu", (event) => event.preventDefault());
   }
 
@@ -183,15 +224,34 @@ export class GameApp {
     if (block !== undefined) this.showToast(`${BLOCK_NAMES[block]} selected`);
   }
 
+  private cyclePreset(direction: number): void {
+    if (this.loading) return;
+    const presets = allPresets();
+    const index = presets.findIndex((preset) => preset.id === this.currentPreset.id);
+    const next = presets[cycleHotbar(Math.max(index, 0), direction, presets.length)];
+    if (!next) return;
+    void this.loadPreset(next.id).then(() => {
+      if (this.entered) this.player.lock();
+    });
+  }
+
+  private pickBlock(): void {
+    if (!this.targetHit) return;
+    const index = HOTBAR_BLOCKS.indexOf(this.targetHit.block);
+    if (index >= 0) this.selectBlock(index);
+    else this.showToast(`${BLOCK_NAMES[this.targetHit.block]} is not in the hotbar`);
+  }
+
   private mine(): void {
-    const hit = raycastVoxel(this.world, this.camera);
+    const hit = this.targetHit;
     if (!hit) return;
     this.world.setBlock(hit.x, hit.y, hit.z, BlockId.AIR);
     this.showToast(`${BLOCK_NAMES[hit.block]} mined`);
+    this.targetHit = raycastVoxel(this.world, this.camera);
   }
 
   private build(): void {
-    const hit = raycastVoxel(this.world, this.camera);
+    const hit = this.targetHit;
     const block = HOTBAR_BLOCKS[this.selected];
     if (!hit || block === undefined) return;
     const x = hit.x + hit.face[0];
@@ -204,6 +264,7 @@ export class GameApp {
     }
     this.world.setBlock(x, y, z, block);
     this.showToast(`${BLOCK_NAMES[block]} placed`);
+    this.targetHit = raycastVoxel(this.world, this.camera);
   }
 
   private setTime(day: boolean): void {
@@ -229,6 +290,25 @@ export class GameApp {
     const delta = Math.min((now - this.lastFrame) / 1000, .05);
     this.lastFrame = now;
     this.player.update(delta);
+
+    this.targetHit = this.player.enabled && !this.loading ? raycastVoxel(this.world, this.camera) : null;
+    this.outline.visible = Boolean(this.targetHit);
+    if (this.targetHit) {
+      this.outline.position.set(this.targetHit.x + 0.5, this.targetHit.y + 0.5, this.targetHit.z + 0.5);
+    }
+
+    if (this.heldButton !== null && now >= this.nextActionAt) {
+      if (this.heldButton === 0) this.mine();
+      else this.build();
+      this.nextActionAt = now + ACTION_REPEAT_MS;
+    }
+
+    const targetFov = this.player.sprinting ? SPRINT_FOV : BASE_FOV;
+    if (Math.abs(this.camera.fov - targetFov) > 0.01) {
+      this.camera.fov = approach(this.camera.fov, targetFov, FOV_RATE, delta);
+      this.camera.updateProjectionMatrix();
+    }
+
     this.mesher.rebuildBudget(10);
     this.renderer.render(this.scene, this.camera);
     this.frames += 1;

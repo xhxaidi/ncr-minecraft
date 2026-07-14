@@ -1,7 +1,56 @@
+// player movement, minecraft-style controls and aabb collision
 import * as THREE from "three";
 import type { SpawnPoint } from "../../content/types/catalog";
 import { isSolid } from "../world/blocks";
 import type { VoxelWorld } from "../world/VoxelWorld";
+
+const WALK_SPEED = 4.317;
+const SPRINT_SPEED = 5.612;
+const SNEAK_SPEED = 1.31;
+const FLY_SPEED = 11;
+const FLY_SPRINT_SPEED = 22;
+const FLY_VERTICAL_SPEED = 9;
+const GRAVITY = 32;
+const JUMP_VELOCITY = 9;
+const TERMINAL_VELOCITY = -60;
+const GROUND_RATE = 12;
+const AIR_RATE = 2.5;
+const FLY_RATE = 6;
+const EYE_HEIGHT = 1.62;
+const SNEAK_EYE_HEIGHT = 1.27;
+const EYE_RATE = 14;
+const DOUBLE_TAP_MS = 300;
+const SUPPORT_PROBE = 0.1;
+const PLAYER_HALF_WIDTH = 0.3;
+const PLAYER_HEIGHT = 1.8;
+
+// frame-rate independent exponential approach toward a target value
+export function approach(current: number, target: number, rate: number, delta: number): number {
+  return current + (target - current) * (1 - Math.exp(-rate * delta));
+}
+
+export class DoubleTapTracker {
+  private last = Number.NEGATIVE_INFINITY;
+
+  constructor(private readonly windowMs: number = DOUBLE_TAP_MS) {}
+
+  tap(now: number): boolean {
+    if (now - this.last <= this.windowMs) {
+      this.last = Number.NEGATIVE_INFINITY;
+      return true;
+    }
+    this.last = now;
+    return false;
+  }
+}
+
+export function isTypingTarget(target: EventTarget | null): boolean {
+  if (typeof HTMLElement === "undefined" || !(target instanceof HTMLElement)) return false;
+  return target instanceof HTMLInputElement
+    || target instanceof HTMLTextAreaElement
+    || target instanceof HTMLSelectElement
+    || target.isContentEditable;
+}
 
 export class PlayerController {
   readonly position = new THREE.Vector3(0, 12, 24);
@@ -11,6 +60,11 @@ export class PlayerController {
   fly = false;
   onGround = false;
   enabled = false;
+  sprinting = false;
+  sneaking = false;
+  private eyeHeight = EYE_HEIGHT;
+  private readonly sprintTap = new DoubleTapTracker();
+  private readonly flyTap = new DoubleTapTracker();
   private readonly keys = new Set<string>();
   private touching = false;
   private touchX = 0;
@@ -23,13 +77,22 @@ export class PlayerController {
     onLockChange: (locked: boolean) => void,
   ) {
     addEventListener("keydown", (event) => {
-      if (event.code === "KeyF" && !event.repeat) {
-        this.fly = !this.fly;
-        this.velocity.y = 0;
+      if (isTypingTarget(event.target)) return;
+      if (this.enabled && (event.code === "Space" || event.code.startsWith("Arrow"))) event.preventDefault();
+      if (!event.repeat) {
+        if (event.code === "KeyF") this.toggleFly();
+        if (event.code === "Space" && this.flyTap.tap(performance.now())) this.toggleFly();
+        if (event.code === "KeyW" && this.sprintTap.tap(performance.now())) this.sprinting = true;
+        // ctrl only arms sprint when w is already held; ctrl-then-w is a browser shortcut
+        if ((event.code === "ControlLeft" || event.code === "ControlRight") && this.keys.has("KeyW")) this.sprinting = true;
+        if (event.code === "KeyS") this.sprinting = false;
       }
       this.keys.add(event.code);
     });
-    addEventListener("keyup", (event) => this.keys.delete(event.code));
+    addEventListener("keyup", (event) => {
+      if (event.code === "KeyW") this.sprinting = false;
+      this.keys.delete(event.code);
+    });
     document.addEventListener("mousemove", (event) => {
       if (document.pointerLockElement !== this.canvas) return;
       this.yaw -= event.movementX * 0.0024;
@@ -38,6 +101,10 @@ export class PlayerController {
     document.addEventListener("pointerlockchange", () => {
       const locked = document.pointerLockElement === this.canvas;
       this.enabled = locked || matchMedia("(pointer: coarse)").matches;
+      if (!locked) {
+        this.keys.clear();
+        this.sprinting = false;
+      }
       onLockChange(locked);
     });
     this.canvas.addEventListener("pointerdown", (event) => {
@@ -61,6 +128,9 @@ export class PlayerController {
     this.velocity.set(0, 0, 0);
     this.yaw = spawn.yaw ?? Math.PI;
     this.pitch = 0;
+    this.sprinting = false;
+    this.sneaking = false;
+    this.eyeHeight = EYE_HEIGHT;
   }
 
   lock(): void {
@@ -76,17 +146,30 @@ export class PlayerController {
     else this.keys.delete(code);
   }
 
+  private toggleFly(): void {
+    this.fly = !this.fly;
+    this.velocity.y = 0;
+  }
+
   private isFree(px: number, py: number, pz: number): boolean {
-    const width = 0.3;
-    const height = 1.8;
-    for (let x = Math.floor(px - width); x <= Math.floor(px + width - 1e-7); x += 1) {
-      for (let y = Math.floor(py); y <= Math.floor(py + height - 1e-7); y += 1) {
-        for (let z = Math.floor(pz - width); z <= Math.floor(pz + width - 1e-7); z += 1) {
+    for (let x = Math.floor(px - PLAYER_HALF_WIDTH); x <= Math.floor(px + PLAYER_HALF_WIDTH - 1e-7); x += 1) {
+      for (let y = Math.floor(py); y <= Math.floor(py + PLAYER_HEIGHT - 1e-7); y += 1) {
+        for (let z = Math.floor(pz - PLAYER_HALF_WIDTH); z <= Math.floor(pz + PLAYER_HALF_WIDTH - 1e-7); z += 1) {
           if (isSolid(this.world.getBlock(x, y, z))) return false;
         }
       }
     }
     return true;
+  }
+
+  private hasSupport(px: number, py: number, pz: number): boolean {
+    const y = Math.floor(py - SUPPORT_PROBE);
+    for (let x = Math.floor(px - PLAYER_HALF_WIDTH); x <= Math.floor(px + PLAYER_HALF_WIDTH - 1e-7); x += 1) {
+      for (let z = Math.floor(pz - PLAYER_HALF_WIDTH); z <= Math.floor(pz + PLAYER_HALF_WIDTH - 1e-7); z += 1) {
+        if (isSolid(this.world.getBlock(x, y, z))) return true;
+      }
+    }
+    return false;
   }
 
   update(delta: number): void {
@@ -96,28 +179,40 @@ export class PlayerController {
       const length = Math.hypot(side, forward) || 1;
       side /= length;
       forward /= length;
-      const sprint = this.keys.has("ShiftLeft") || this.keys.has("ShiftRight");
-      const speed = this.fly ? sprint ? 24 : 12 : sprint ? 7 : 4.3;
+      const shift = this.keys.has("ShiftLeft") || this.keys.has("ShiftRight");
+      this.sneaking = shift && !this.fly;
+      if (this.sneaking || forward <= 0) this.sprinting = false;
+      const speed = this.fly
+        ? this.sprinting ? FLY_SPRINT_SPEED : FLY_SPEED
+        : this.sneaking ? SNEAK_SPEED : this.sprinting ? SPRINT_SPEED : WALK_SPEED;
       const sin = Math.sin(this.yaw);
       const cos = Math.cos(this.yaw);
-      this.velocity.x = (side * cos - forward * sin) * speed;
-      this.velocity.z = (-side * sin - forward * cos) * speed;
+      const targetX = (side * cos - forward * sin) * speed;
+      const targetZ = (-side * sin - forward * cos) * speed;
+      const rate = this.fly ? FLY_RATE : this.onGround ? GROUND_RATE : AIR_RATE;
+      this.velocity.x = approach(this.velocity.x, targetX, rate, delta);
+      this.velocity.z = approach(this.velocity.z, targetZ, rate, delta);
+      if (targetX === 0 && Math.abs(this.velocity.x) < 0.01) this.velocity.x = 0;
+      if (targetZ === 0 && Math.abs(this.velocity.z) < 0.01) this.velocity.z = 0;
       if (this.fly) {
-        this.velocity.y = this.keys.has("Space") ? speed : this.keys.has("KeyC") ? -speed : 0;
+        const targetY = this.keys.has("Space") ? FLY_VERTICAL_SPEED : shift || this.keys.has("KeyC") ? -FLY_VERTICAL_SPEED : 0;
+        this.velocity.y = approach(this.velocity.y, targetY, FLY_RATE, delta);
       } else {
-        this.velocity.y = Math.max(-50, this.velocity.y - 25 * delta);
-        if (this.keys.has("Space") && this.onGround) this.velocity.y = 8.6;
+        this.velocity.y = Math.max(TERMINAL_VELOCITY, this.velocity.y - GRAVITY * delta);
+        if (this.keys.has("Space") && this.onGround) this.velocity.y = JUMP_VELOCITY;
       }
 
       const move = (axis: "x" | "y" | "z", distance: number) => {
         if (!distance) return;
+        // sneaking on the ground refuses horizontal moves that would leave support
+        const guard = axis !== "y" && this.sneaking && this.onGround && !this.fly;
         const step = Math.sign(distance) * Math.min(Math.abs(distance), 0.45);
         let remaining = distance;
         while (Math.abs(remaining) > 1e-8) {
           const amount = Math.abs(remaining) < Math.abs(step) ? remaining : step;
           const next = this.position.clone();
           next[axis] += amount;
-          if (this.isFree(next.x, next.y, next.z)) {
+          if (this.isFree(next.x, next.y, next.z) && (!guard || this.hasSupport(next.x, next.y, next.z))) {
             this.position[axis] += amount;
             remaining -= amount;
           } else {
@@ -131,13 +226,15 @@ export class PlayerController {
           }
         }
       };
+      // y first so onGround is fresh for the sneak edge guard
       this.onGround = false;
+      move("y", this.velocity.y * delta);
       move("x", this.velocity.x * delta);
       move("z", this.velocity.z * delta);
-      move("y", this.velocity.y * delta);
     }
 
-    this.camera.position.set(this.position.x, this.position.y + 1.62, this.position.z);
+    this.eyeHeight = approach(this.eyeHeight, this.sneaking ? SNEAK_EYE_HEIGHT : EYE_HEIGHT, EYE_RATE, delta);
+    this.camera.position.set(this.position.x, this.position.y + this.eyeHeight, this.position.z);
     this.camera.rotation.set(0, 0, 0);
     this.camera.rotateY(this.yaw);
     this.camera.rotateX(this.pitch);

@@ -39,3 +39,7 @@ export const HOTBAR_BLOCKS: BlockIdValue[] = [
 export function isSolid(block: BlockIdValue): boolean {
   return block !== BlockId.AIR && block !== BlockId.WATER;
 }
+
+export function cycleHotbar(current: number, direction: number, length: number): number {
+  return ((current + direction) % length + length) % length;
+}

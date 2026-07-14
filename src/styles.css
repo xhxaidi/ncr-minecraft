@@ -74,7 +74,7 @@ button { color: inherit; }
 .hotbar-slot.active { border-color: var(--saffron); box-shadow: 0 0 0 2px rgba(243,164,71,.22); }
 .hotbar-slot canvas { width: 100%; height: 100%; image-rendering: pixelated; }
 .hotbar-slot kbd { position: absolute; right: 3px; bottom: 2px; font: 600 8px ui-monospace, monospace; }
-.controls-card { position: fixed; z-index: 6; right: 20px; bottom: 28px; display: grid; gap: 7px; padding: 12px; background: rgba(13,30,29,.62); font: 500 9px ui-monospace, monospace; pointer-events: none; }
+.controls-card { position: fixed; z-index: 6; right: 20px; bottom: 28px; display: grid; grid-template-columns: repeat(2, auto); gap: 6px 14px; padding: 12px; background: rgba(13,30,29,.62); font: 500 9px ui-monospace, monospace; pointer-events: none; }
 .controls-card span { display: flex; align-items: center; gap: 8px; }
 .controls-card kbd { min-width: 72px; padding: 3px 5px; background: rgba(255,255,255,.1); text-align: center; }
 .toast { position: fixed; z-index: 12; left: 50%; bottom: 96px; transform: translateX(-50%); padding: 8px 12px; background: rgba(13,30,29,.76); font: 600 9px ui-monospace, monospace; letter-spacing: .05em; pointer-events: none; }

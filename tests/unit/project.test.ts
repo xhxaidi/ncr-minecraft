@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { CITY_CATALOG, allPresets, getPreset } from "../../src/content/catalog";
 import { indiaGate } from "../../src/content/cities/delhi/landmarks/indiaGate";
 import { qutubMinar } from "../../src/content/cities/delhi/landmarks/qutubMinar";
-import { BlockId } from "../../src/engine/world/blocks";
+import { BlockId, cycleHotbar } from "../../src/engine/world/blocks";
+import { DoubleTapTracker, approach } from "../../src/engine/physics/PlayerController";
 import { GROUND_LEVEL, VoxelWorld } from "../../src/engine/world/VoxelWorld";
 import { geoToBlock } from "../../src/geo/osm/projection";
 import { pointInPolygon, rasterLine } from "../../src/geo/osm/raster";
@@ -37,6 +38,36 @@ describe("geospatial rasterization", () => {
     const square = [{ x: 0, z: 0 }, { x: 4, z: 0 }, { x: 4, z: 4 }, { x: 0, z: 4 }];
     expect(pointInPolygon({ x: 2, z: 2 }, square)).toBe(true);
     expect(pointInPolygon({ x: 8, z: 2 }, square)).toBe(false);
+  });
+});
+
+describe("player physics helpers", () => {
+  it("approaches a target and converges", () => {
+    expect(approach(0, 10, 12, 0)).toBe(0);
+    expect(approach(0, 10, 12, 1)).toBeGreaterThan(9.999);
+    expect(approach(5, 5, 12, 0.016)).toBe(5);
+  });
+
+  it("is frame-rate independent", () => {
+    const single = approach(0, 10, 12, 0.032);
+    const halfStep = approach(0, 10, 12, 0.016);
+    const double = approach(halfStep, 10, 12, 0.016);
+    expect(double).toBeCloseTo(single, 9);
+  });
+
+  it("detects double taps within the window only", () => {
+    const tracker = new DoubleTapTracker(300);
+    expect(tracker.tap(0)).toBe(false);
+    expect(tracker.tap(250)).toBe(true);
+    expect(tracker.tap(300)).toBe(false);
+    expect(tracker.tap(700)).toBe(false);
+    expect(tracker.tap(950)).toBe(true);
+  });
+
+  it("cycles the hotbar with wraparound", () => {
+    expect(cycleHotbar(0, -1, 9)).toBe(8);
+    expect(cycleHotbar(8, 1, 9)).toBe(0);
+    expect(cycleHotbar(3, 1, 9)).toBe(4);
   });
 });
 
