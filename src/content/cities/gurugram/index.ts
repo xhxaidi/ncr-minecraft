@@ -15,7 +15,7 @@ export const gurugram: CityDefinition = {
       origin: { lat: 28.495, lon: 77.088 },
       dataUrl: "/data/cities/gurugram/presets/cyber-city.overpass.json",
       radiusChunks: 12,
-      spawn: { x: 0, y: 12, z: 20, yaw: Math.PI },
+      spawn: { x: 0, y: 12, z: 20, yaw: 0 },
       landmarks: [],
     },
   ],

@@ -61,7 +61,7 @@ export function createTextureAtlas(): TextureAtlas {
   paint(5, [54, 107, 198]);
   paint(6, [122, 90, 51], { grain: true });
   paint(7, [62, 125, 44], { noise: 0.34 });
-  paint(8, [216, 199, 142]);
+  paint(8, [216, 199, 142], { courses: true, noise: 0.08 });
   paint(9, [181, 83, 60], { courses: true, noise: 0.1 });
   paint(10, [242, 239, 232], { noise: 0.04 });
   paint(11, [35, 37, 43], { noise: 0.1 });
