@@ -13,12 +13,16 @@ export const delhi: CityDefinition = {
       cityId: "delhi",
       name: "India Gate & Kartavya Path",
       shortName: "India Gate",
-      description: "OSM avenues and lawns surrounding a detailed, fully mineable India Gate.",
+      description: "A source-modelled India Gate with accurate proportions and an unobstructed ceremonial approach.",
       origin: indiaGate.anchor,
       dataUrl: "/data/cities/delhi/presets/india-gate.overpass.json",
       radiusChunks: 12,
-      spawn: { x: 0, y: 12, z: 48, yaw: 0 },
+      spawn: { x: 0, y: 12, z: 60, yaw: 0 },
       landmarks: [indiaGate],
+      credit: {
+        label: "India Gate model: sujankdh · CC BY-SA",
+        url: "https://www.thingiverse.com/thing:7027090",
+      },
     },
     {
       id: "jama-masjid",

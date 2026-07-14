@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
+    "voxelize:india-gate": "node scripts/voxelize-obj.mjs assets/source/india-gate/india-gate-sujankdh.obj src/content/cities/delhi/landmarks/data/indiaGateVoxels.generated.ts 46",
     "check": "npm run test && npm run build"
   },
   "dependencies": {

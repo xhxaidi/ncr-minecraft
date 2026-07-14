@@ -24,7 +24,7 @@ export const mumbai: CityDefinition = {
     origin: { lat: 18.9219, lon: 72.8347 },
     dataUrl: "/data/cities/mumbai/presets/gateway.overpass.json",
     radiusChunks: 12,
-    spawn: { x: 0, y: 12, z: 36, yaw: Math.PI },
+    spawn: { x: 0, y: 12, z: 36, yaw: 0 },
     landmarks: [gatewayOfIndia],
   }],
 };
@@ -52,6 +52,18 @@ export const exampleLandmark: LandmarkDefinition = {
 
 Do not add landmark checks to the renderer, collision system or OSM parser.
 Registration is the extension mechanism.
+
+## Add a landmark from a 3D source model
+
+1. Confirm that the source permits redistribution and modification.
+2. Store the original model and its license under `assets/source/<landmark>/`.
+3. Add visible attribution through the preset's `credit` field.
+4. Generate compact spans with `scripts/voxelize-obj.mjs`.
+5. Commit the source, attribution, transformation script and generated output.
+6. Test the opening, bounds, approach clearance and block count.
+
+India Gate is the reference implementation. Its generated data is rebuilt with
+`npm run voxelize:india-gate`.
 
 ## Add a block
 
