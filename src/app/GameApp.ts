@@ -3,7 +3,7 @@ import { CITY_CATALOG, getPreset } from "../content/catalog";
 import type { PresetDefinition } from "../content/types/catalog";
 import { HOTBAR_BLOCKS, BLOCK_NAMES, BlockId, type BlockIdValue } from "../engine/world/blocks";
 import { VoxelWorld } from "../engine/world/VoxelWorld";
-import { createTextureAtlas } from "../engine/rendering/textureAtlas";
+import { ATLAS_TILES_PER_ROW, createTextureAtlas } from "../engine/rendering/textureAtlas";
 import { ChunkMesher } from "../engine/rendering/ChunkMesher";
 import { PlayerController } from "../engine/physics/PlayerController";
 import { raycastVoxel } from "../engine/physics/raycast";
@@ -107,7 +107,7 @@ export class GameApp {
       canvas.width = canvas.height = 16;
       const context = canvas.getContext("2d");
       const tile = this.atlas.tileForBlock(block, 0);
-      context?.drawImage(this.atlas.canvas, (tile % 4) * 16, Math.floor(tile / 4) * 16, 16, 16, 0, 0, 16, 16);
+      context?.drawImage(this.atlas.canvas, (tile % ATLAS_TILES_PER_ROW) * 16, Math.floor(tile / ATLAS_TILES_PER_ROW) * 16, 16, 16, 0, 0, 16, 16);
       const key = document.createElement("kbd");
       key.textContent = String(index + 1);
       button.append(canvas, key);
@@ -164,7 +164,7 @@ export class GameApp {
       });
       this.player.setSpawn(this.currentPreset.spawn);
       this.mesher.rebuildBudget(36);
-      this.stats.textContent = `${result.buildings} buildings · ${result.roads} roads · ${result.landmarks} landmarks`;
+      this.stats.textContent = `${result.buildings} buildings · ${result.roads} roads · ${result.trees} trees · ${result.landmarks} landmarks`;
       required<HTMLElement>("#world-source").textContent = this.currentPreset.dataUrl ? "CACHED OPENSTREETMAP" : "HANDCRAFTED LANDMARK LAB";
       this.showToast(`${this.currentPreset.shortName} ready · every visible block is editable`);
     } catch (error) {

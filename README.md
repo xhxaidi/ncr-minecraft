@@ -8,7 +8,9 @@ handcrafted, fully editable landmark builders.
 
 - India Gate and Kartavya Path — OSM city context + mineable India Gate
 - Old Delhi and Jama Masjid — OSM roads and building footprints
-- Connaught Place — OSM radial roads and urban blocks
+- Connaught Place — fine-grained (2 m/block) white colonnaded circles, Central
+  Park with the giant national flag, metro gates, footpaths, crossings, trees,
+  hedges and street furniture from a dense OSM extract
 - Gurugram Cyber City — OSM roads and high-rise footprints
 - Qutub Minar Landmark Lab — handcrafted mineable tower
 

@@ -14,6 +14,16 @@ export const BlockId = {
   CONCRETE: 12,
   GLASS: 13,
   BRICK: 14,
+  PAVEMENT: 15,
+  PLASTER: 16,
+  SAFFRON: 17,
+  FLAG_GREEN: 18,
+  ROAD_LINE: 19,
+  HEDGE: 20,
+  METAL: 21,
+  LIGHT: 22,
+  ROOF: 23,
+  CHAKRA_BLUE: 24,
 } as const;
 
 export type BlockIdValue = (typeof BlockId)[keyof typeof BlockId];
@@ -21,15 +31,16 @@ export type BlockIdValue = (typeof BlockId)[keyof typeof BlockId];
 export const BLOCK_NAMES = [
   "Air", "Grass", "Dirt", "Stone", "Road", "Water", "Wood", "Leaves",
   "Sandstone", "Red sandstone", "White marble", "Black marble", "Concrete",
-  "Glass", "Brick",
+  "Glass", "Brick", "Pavement", "Plaster", "Saffron", "Flag green",
+  "Road marking", "Hedge", "Metal", "Lamp light", "Roof", "Chakra blue",
 ] as const;
 
 export const HOTBAR_BLOCKS: BlockIdValue[] = [
-  BlockId.RED_SANDSTONE,
+  BlockId.PLASTER,
   BlockId.WHITE_MARBLE,
-  BlockId.BLACK_MARBLE,
+  BlockId.RED_SANDSTONE,
   BlockId.BRICK,
-  BlockId.STONE,
+  BlockId.PAVEMENT,
   BlockId.ROAD,
   BlockId.WOOD,
   BlockId.LEAVES,

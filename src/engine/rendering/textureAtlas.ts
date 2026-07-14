@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { BlockId, type BlockIdValue } from "../world/blocks";
 
 const TILE_SIZE = 16;
-const TILES_PER_ROW = 4;
+export const ATLAS_TILES_PER_ROW = 8;
+const TILES_PER_ROW = ATLAS_TILES_PER_ROW;
 
 export type TextureAtlas = {
   canvas: HTMLCanvasElement;
@@ -29,7 +30,7 @@ export function createTextureAtlas(): TextureAtlas {
   const paint = (
     tile: number,
     base: [number, number, number],
-    options: { noise?: number; courses?: boolean; brick?: boolean; grain?: boolean; frame?: boolean } = {},
+    options: { noise?: number; courses?: boolean; brick?: boolean; grain?: boolean; frame?: boolean; band?: [number, number, number] } = {},
   ) => {
     const rnd = random(tile * 7_919 + 1);
     const ox = (tile % TILES_PER_ROW) * TILE_SIZE;
@@ -51,6 +52,10 @@ export function createTextureAtlas(): TextureAtlas {
       context.fillRect(ox, oy, 1, 16);
       context.fillRect(ox + 15, oy, 1, 16);
     }
+    if (options.band) {
+      context.fillStyle = `rgb(${options.band[0]},${options.band[1]},${options.band[2]})`;
+      context.fillRect(ox, oy + 6, 16, 4);
+    }
   };
 
   paint(0, [92, 171, 72]);
@@ -68,6 +73,16 @@ export function createTextureAtlas(): TextureAtlas {
   paint(12, [154, 160, 164], { noise: 0.08 });
   paint(13, [127, 182, 230], { noise: 0.05, frame: true });
   paint(14, [156, 70, 51], { brick: true, noise: 0.1 });
+  paint(15, [204, 198, 186], { grain: true, noise: 0.07 });
+  paint(16, [238, 232, 216], { noise: 0.05, courses: true });
+  paint(17, [244, 122, 32], { noise: 0.05 });
+  paint(18, [22, 134, 24], { noise: 0.06 });
+  paint(19, [70, 74, 79], { noise: 0.08, band: [225, 225, 220] });
+  paint(20, [43, 94, 36], { noise: 0.32 });
+  paint(21, [124, 130, 138], { noise: 0.06, grain: true });
+  paint(22, [255, 241, 194], { noise: 0.03 });
+  paint(23, [124, 118, 108], { noise: 0.1, courses: true });
+  paint(24, [16, 52, 143], { noise: 0.06 });
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.magFilter = THREE.NearestFilter;
@@ -78,8 +93,9 @@ export function createTextureAtlas(): TextureAtlas {
   return {
     canvas,
     texture,
-    tileForBlock: (block, faceY) => block === BlockId.GRASS && faceY !== 1
-      ? faceY === -1 ? BlockId.DIRT : 1
+    // grass: green top (tile 0), earthy sides (tile 1), dirt underside
+    tileForBlock: (block, faceY) => block === BlockId.GRASS
+      ? faceY === 1 ? 0 : faceY === -1 ? BlockId.DIRT : 1
       : block,
   };
 }

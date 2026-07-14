@@ -30,6 +30,16 @@ export const mumbai: CityDefinition = {
 };
 ```
 
+Optional preset fields:
+
+- `blockMetres` sets metres per voxel (default 3). Connaught Place uses 2 for a
+  finer-grained world; smaller values need a larger `radiusChunks` to cover the
+  same real-world area.
+- `buildingStyle` lets a preset restyle OSM buildings. It receives the raw tags,
+  the footprint centre in metres from the origin and the generator's suggestion,
+  and returns the final `{ block, heightMetres, arcade }`. Arcade buildings get
+  an open ground-floor colonnade.
+
 ## Add a landmark
 
 1. Create a builder in the owning city's `landmarks/` directory.
@@ -44,11 +54,14 @@ export const exampleLandmark: LandmarkDefinition = {
   description: "A fully mineable example.",
   anchor: { lat: 0, lon: 0 },
   suppressRadiusMetres: 80,
-  build: ({ world, originX, originZ, groundY, block }) => {
+  build: ({ world, originX, originZ, groundY, block, blockMetres }) => {
     world.setBlockRaw(originX, groundY + 1, originZ, block.BRICK);
   },
 };
 ```
+
+`blockMetres` is the preset's metres-per-voxel scale; divide real-world
+dimensions by it so a landmark keeps its true size at any resolution.
 
 Do not add landmark checks to the renderer, collision system or OSM parser.
 Registration is the extension mechanism.

@@ -11,6 +11,11 @@ handcrafted landmark builders in a Netlify-ready Vite application.
 - Mine/place any visible block
 - Cached OSM import for India Gate, Old Delhi, Connaught Place and Cyber City
 - Generic roads, parks, water and hollow building extrusion
+- Per-preset voxel scale, multipolygon buildings, footpaths, zebra crossings,
+  road markings, kerbside pavements, mapped trees, hedges, fences, fountains,
+  street lamps, metro entrances and flagpoles
+- Fine-grained Connaught Place (2 m/block): white colonnaded circles via a
+  preset building-style hook, Central Park amphitheatre and the 63 m flag
 - Mineable India Gate and Qutub Minar landmark builders
 - Guest naming, district selection, touch controls and day/night mode
 - TypeScript, unit tests, production build and Netlify configuration
