@@ -2,11 +2,11 @@
 
 **Real NCR, every block mineable.** Dilli Blocks converts cached OpenStreetMap
 data into a browser-playable voxel city, then replaces important sites with
-handcrafted, fully editable landmark builders.
+source-modelled or handcrafted, fully editable landmark builders.
 
 ## Included worlds
 
-- India Gate and Kartavya Path — OSM city context + mineable India Gate
+- India Gate and Kartavya Path — OSM context + CC-licensed source-modelled landmark
 - Old Delhi and Jama Masjid — OSM roads and building footprints
 - Connaught Place — OSM radial roads and urban blocks
 - Gurugram Cyber City — OSM roads and high-rise footprints
@@ -50,6 +50,11 @@ No API key is required for the included worlds. Map data is cached under
 `public/data/cities` and Three.js is bundled locally. Map data is ©
 [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) and is
 used under the ODbL.
+
+The India Gate geometry is derived from
+["India Gate" by sujankdh](https://www.thingiverse.com/thing:7027090) under CC
+BY-SA. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) and the reproducible
+`npm run voxelize:india-gate` pipeline.
 
 ## Add content
 

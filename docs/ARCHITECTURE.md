@@ -6,6 +6,10 @@ without turning the renderer into a collection of special cases.
 
 ```text
 ncr-minecraft/
+├── assets/source/                    # licensed source meshes + attribution
+│   └── india-gate/
+├── scripts/
+│   └── voxelize-obj.mjs              # OBJ → compact mineable voxel spans
 ├── public/
 │   ├── data/
 │   │   └── cities/
@@ -37,7 +41,7 @@ ncr-minecraft/
 │   │   └── cities/
 │   │       ├── delhi/
 │   │       │   ├── index.ts         # Delhi presets
-│   │       │   └── landmarks/       # Delhi landmark builders
+│   │       │   └── landmarks/       # builders + generated voxel datasets
 │   │       └── gurugram/
 │   │           └── index.ts         # Gurugram presets
 │   ├── main.ts
@@ -79,6 +83,11 @@ A landmark owns its geographic anchor, suppression radius and a builder. The
 generic OSM generator skips ordinary building extrusion near that anchor and
 then executes the builder. Builders write ordinary block IDs into `VoxelWorld`,
 so mining, placement, collision and rendering work automatically.
+
+Landmarks can be authored directly or generated from an attributed source mesh.
+The India Gate pipeline stores its licensed OBJ separately, converts it into
+compact horizontal spans at build time and commits the deterministic output.
+This keeps runtime loading fast while preserving provenance and reproducibility.
 
 ### Engine
 
